@@ -2,11 +2,6 @@ import os
 from sqlmodel import SQLModel, create_engine, Session
 from dotenv import load_dotenv
 
-# app/database.py
-import os
-from sqlmodel import SQLModel, create_engine, Session
-from dotenv import load_dotenv
-
 # Carregar variáveis de ambiente do arquivo .env
 load_dotenv()
 
@@ -21,6 +16,9 @@ DATABASE_URL = f"mysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}/{MYSQL_DB}"
 
 # Configurar o engine do SQLModel
 engine = create_engine(DATABASE_URL)
+
+def create_tables():
+    SQLModel.metadata.create_all(engine)
 
 # Função para obter a sessão de banco de dados
 def get_session():

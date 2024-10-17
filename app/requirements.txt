@@ -1,0 +1,9 @@
+fastapi==0.95.0          # Framework web para construir APIs
+uvicorn==0.23.0         # Servidor ASGI para executar aplicações FastAPI
+sqlmodel==0.0.8         # Modelagem de dados com SQLAlchemy e Pydantic
+pydantic==1.10.0        # Validação de dados e serialização
+passlib[bcrypt]       # Biblioteca para hashing de senhas
+requests==2.28.1        # Para fazer requisições HTTP a APIs externas
+python-dotenv==1.0.0    # Para carregar variáveis de ambiente a partir de um arquivo .env
+PyJWT==2.6.0                 # Para trabalhar com JWT
+mysqlclient             # Para trabalhar com MySQL

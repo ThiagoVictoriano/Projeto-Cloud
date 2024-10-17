@@ -1,0 +1,21 @@
+name: projeto
+
+services:
+  web:
+    build:
+      context: ./app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    volumes:
+      - ./app:/app
+
+  db:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: projeto
+
+    ports:
+      - "3307:3306"

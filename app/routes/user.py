@@ -1,7 +1,7 @@
 from datetime import timedelta
 from typing import Annotated
 from fastapi import Depends, FastAPI, HTTPException, APIRouter
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel
 from sqlmodel import SQLModel, Field, Session, select
 from db.db import get_session
@@ -21,6 +21,10 @@ class User(BaseUser, table=True):  # Tabela de usuários no banco de dados
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+class LoginData(BaseModel): 
+    email: str
+    senha: str
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
@@ -55,16 +59,16 @@ def register(user: User, session: Session = Depends(get_session)):
     return {"jwt": token.access_token}
 
 @router.post("/login")
-def login(form_data: OAuth2PasswordRequestForm = Depends(), session: Session = Depends(get_session)):
-    # Buscar o usuário pelo email (username)
-    statement = select(User).where(User.email == form_data.username)
+def login(login_data: LoginData, session: Session = Depends(get_session)):
+    # Buscar o usuário pelo email
+    statement = select(User).where(User.email == login_data.email)
     user = session.exec(statement).first()
 
     if not user:
         raise HTTPException(status_code=401, detail="Email não registrado")
 
     # Verificar a senha
-    if not verify_password(form_data.password, user.senha):
+    if not verify_password(login_data.senha, user.senha):
         raise HTTPException(status_code=401, detail="Senha incorreta")
 
     # Gerar um token JWT
