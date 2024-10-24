@@ -2,20 +2,23 @@ name: projeto
 
 services:
   web:
-    build:
-      context: ./app
+    image: thiagovic/projeto:latest
     ports:
       - "8000:8000"
+    environment:
+      MYSQL_USER: ${MYSQL_USER:-root}    
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-root} 
+      MYSQL_HOST: ${MYSQL_HOST:-db:3306}
+      MYSQL_DB: ${MYSQL_DB:-projeto} 
+    restart: always
     depends_on:
       - db
-    volumes:
-      - ./app:/app
 
   db:
     image: mysql:5.7
     environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: projeto
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD:-root}
+      MYSQL_DATABASE: ${MYSQL_DB:-projeto}
 
     ports:
       - "3307:3306"
