@@ -27,6 +27,48 @@ Antes de instalar e executar o projeto, você precisa ter os seguintes itens ins
 - **Docker**: Para containerização
 - **Python**: 3.10
 
+# Docker Hub
+
+Link para o repositório: [thiagovic/projeto](https://hub.docker.com/repository/docker/thiagovic/projeto/general)
+
+## Comandos Utilizados
+
+```bash
+docker login
+docker tag mysql:5.7 thiagovic/projeto:latest
+docker push thiagovic/projeto:latest
+```
+
+## Arquivo yaml
+
+O arquivo compose.yaml se encontra na raiz do repositório, na mesma localização que o README.md, baixe-o ou simplesmente crie um arquivo próprio compose.yaml com o seguinte código:
+```bash
+name: projeto
+
+services:
+  web:
+    image: thiagovic/projeto:latest
+    ports:
+      - "8000:8000"
+    environment:
+      MYSQL_USER: ${MYSQL_USER:-root}    
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-root} 
+      MYSQL_HOST: ${MYSQL_HOST:-db:3306}
+      MYSQL_DB: ${MYSQL_DB:-projeto} 
+    restart: always
+    depends_on:
+      - db
+
+  db:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASSWORD:-root}
+      MYSQL_DATABASE: ${MYSQL_DB:-projeto}
+
+    ports:
+      - "3307:3306"
+```
+
 ## Instalação
 
 1. **Clone o repositório**:
@@ -102,6 +144,8 @@ curl -X POST http://localhost:8000/register \
      -d '{"nome": "teste", "email": "teste@email.com", "senha": "teste"}'
 ```
 
+![register](img/endpoint_register.png)
+
 ### Login
 
 ```bash
@@ -109,6 +153,8 @@ curl -X POST http://localhost:8000/login \
      -H "Content-Type: application/json" \
      -d '{"email": "teste@email.com", "senha": "teste"}'
 ```
+
+![login](img/endpoint_login.png)
 
 ### Requisição com Header de Autorização
 
@@ -119,18 +165,8 @@ curl -X GET http://localhost:8000/consultar \
      -H "Authorization: Bearer <seu_token_jwt>"
 ```
 
-# Docker Hub
+![consultar](img/endpoint_consultar.png)
 
-Link para o repositório: [thiagovic/projeto](https://hub.docker.com/repository/docker/thiagovic/projeto/general)
-
-## Comandos Utilizados
-
-```bash
-docker login
-docker tag mysql:5.7 thiagovic/projeto:latest
-docker push thiagovic/projeto:latest
-```
-
-## Arquivo yaml
-
-O arquivo compose.yaml se encontra na raiz do repositório, na mesma localização que o README.md.
+### Video demonstrando as end points 📺
+---
+https://youtu.be/bvK75yAwn78?feature=shared
