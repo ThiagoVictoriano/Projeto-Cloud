@@ -170,3 +170,181 @@ curl -X GET http://localhost:8000/consultar \
 ### Video demonstrando as end points 📺
 ---
 https://youtu.be/bvK75yAwn78?feature=shared
+
+# AWS
+
+## Documentação do Projeto - Kubernetes e AWS EKS
+
+Este documento descreve o processo de implantação de uma aplicação e banco de dados utilizando o Kubernetes no Amazon EKS (Elastic Kubernetes Service).
+
+## 1. **Configuração Inicial do EKS**
+
+### 1.1 Criação do Cluster EKS
+
+- Foi criado um cluster EKS na região **sa-east-1**.
+- O cluster foi configurado para utilizar nós EC2, com a criação de duas instâncias do tipo **m5.large** para o cluster.
+
+### 1.2 Configuração do AWS CLI e `kubectl`
+
+- O **AWS CLI** foi instalado e configurado utilizando as credenciais do usuário.
+- O comando `aws eks update-kubeconfig --region sa-east-1 --name Eks` foi usado para configurar o arquivo kubeconfig e estabelecer a conexão com o cluster EKS.
+
+## 2. **Implantação da Aplicação e Banco de Dados no Kubernetes**
+
+### 2.1 Estrutura do Projeto
+
+A aplicação foi dividida em dois serviços:
+1. **Aplicação Web** - Aplicação Python (FastAPI) que está sendo executada com o servidor Uvicorn.
+2. **Banco de Dados** - Banco de dados MySQL 5.7 utilizado pela aplicação.
+
+### 2.2 Definição dos Arquivos YAML
+
+#### 2.2.1 **db.yaml**
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: db
+  template:
+    metadata:
+      labels:
+        app: db
+    spec:
+      containers:
+        - name: db
+          image: mysql:5.7
+          ports:
+            - containerPort: 3306
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: "root_password"
+            - name: MYSQL_DATABASE
+              value: "projeto"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: db-service
+spec:
+  selector:
+    app: db
+  ports:
+    - protocol: TCP
+      port: 3306
+      targetPort: 3306
+  type: ClusterIP
+```
+
+#### 2.2.2 **web.yaml**
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+        - name: web
+          image: thiagovic/projeto:latest
+          ports:
+            - containerPort: 8000
+          env:
+            - name: MYSQL_USER
+              value: "root"
+            - name: MYSQL_PASSWORD
+              value: "root_password"
+            - name: MYSQL_HOST
+              value: "db-service"
+            - name: MYSQL_DB
+              value: "projeto"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: web-service
+spec:
+  selector:
+    app: web
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8000
+  type: LoadBalancer
+```
+
+### 2.3 Explicação dos Arquivos YAML
+
+- **Deployments**: Configuraram o número de réplicas dos pods, bem como as variáveis de ambiente (como credenciais do banco de dados).
+- **Services**:
+  - O `web-service` é exposto através de um **LoadBalancer** para tornar a aplicação acessível externamente na porta 80, que é mapeada para a porta 8000 no pod da aplicação.
+  - O `db-service` é utilizado para expor o banco de dados MySQL internamente no cluster, utilizando a porta 3306.
+
+### 2.4 Aplicação dos Arquivos no Cluster
+
+- Os arquivos YAML foram aplicados no cluster EKS utilizando o comando:
+  ```bash
+  kubectl apply -f /k8s
+  ```
+
+## 3. **Monitoramento e Gerenciamento de Pods e ReplicaSets**
+
+### 3.1 Verificação de Pods e ReplicaSets
+
+Os comandos a seguir foram utilizados para monitorar o status dos pods e ReplicaSets:
+
+- Para verificar o status dos pods:
+  ```bash
+  kubectl get pods
+  ```
+- Para verificar o status dos ReplicaSets:
+  ```bash
+  kubectl get replicaset
+  ```
+
+## 4. **Exposição Externa da Aplicação**
+
+### 4.1 Serviço `web-service`
+
+A aplicação foi exposta externamente através de um `Service` com tipo **LoadBalancer**. Isso cria um IP externo para acessar a aplicação.
+
+O comando para verificar o `EXTERNAL-IP` foi:
+
+```bash
+kubectl get service web-service
+```
+
+### 4.2 Testes de Acesso
+
+A aplicação foi acessada externamente utilizando o IP fornecido pelo LoadBalancer, testando a conectividade via HTTP (porta 80) e confirmando o funcionamento da aplicação no endereço:
+
+```bash
+curl http://a827cc135f72c492e8c8a4e8b4cd7392-568558908.sa-east-1.elb.amazonaws.com
+```
+
+## 5. **Considerações Finais**
+
+- O cluster EKS foi configurado com duas instâncias EC2 para hospedar os pods.
+- A aplicação foi configurada para usar o MySQL como banco de dados e foi exposta externamente através de um LoadBalancer.
+- O processo de implantação do Kubernetes foi realizado com sucesso, e as aplicações estão acessíveis externamente.
+
+### Video demonstrando o EKS 📺
+---
+#### https://youtu.be/RsW1SgRbpfY
+---
